@@ -1,47 +1,55 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Stranka A</title>
-        <link rel="icon" type="image/png" href="UMlogo.PNG">        
+        <title>My page</title>        
     </head>
     <body>
         <header>
-            <h1> Hi there! </h1>
-            
+            <h1> Marcel Ceselka </h1>            
             <nav>
-                <a href="index.html">Home</a>
-                <a href="about.html" target="_blank">About</a>
+                <a href="#home">Home</a>
+                <a href="#about">About</a>                
+                <a href="#portfolio">Portfolio</a>
+                <a href="#resume">Resume</a>
+                <a href="https://www.facebook.com" target="_blank">Facebook</a>
+                <a href="https://www.linkedin.com" target="_blank">Linkedin</a>
             </nav>
         </header>
-        <nav> Home, Bla</nav>
-        <article> Text ktory bez contextu dava zmysel je v article tagu</article>
-        <section>
-            <h2>Obrazok 1</h2>
-            <caption>
-                <img src="rozvrh.PNG" alt="My timesheet" width="50%" height="50%">
-                <figcaption>Moj rozvrh</figcaption>
-            </caption>
-
-            
-            <h3>Sekcia 1:</h3>
-            <p>let’s add a new group of content, using the element, that introduces our conference.</p>
-            <section>
-                <h4> Sekcia 1.1:</h4>
-            </section>
+        <section id="home">
+            <h2>Home</h2>
+            <ul>                
+                <li>Steak</li>                
+                <li>Halusky</li>
+                <li>Pirohy</li>
+                <li>Cheesecake</li>
+            </ul>
+        </section>        
+        <section id="About">
+            <h2>About</h2>
+            <p>Progress in this course(100%) <progress value="100" max="100"></progress></p>
+            <p>Progress in the Specialization capstone(20%) <progress value="20" max="100"></progress></p>
+            <p>Progress in life goals(40%) <progress value="40" max="100"></progress></p>
         </section>
-        <aside>
-        <p> Odkaz na <a href="http://google.com" target="_blank">Google</a></p>
-        </aside>
-
-        <p>Text about <strong>HTML</strong> and <em>CSS</em></p>
-        <footer> <small>&copy; Styles Conference</small>
-        
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="about.html" target="_blank">About</a>
-        </nav>
-        
+        <section id="Portfolio">
+            <h2>Portfolio</h2>
+            <details>
+                <summary>My Childhood</summary>
+                <p>I grew up in the second biggest city in Slovakia named Kosice.</p>
+            </details>
+        </section>
+        <section id="Resume">
+            <h2>Resume</h2>
+            <details>
+                <summary>My Childhood</summary>
+                <p>I grew up in the second biggest city in Slovakia named Kosice.</p>
+            </details>
+        </section>
+        <footer> 
+            <p>
+                <img src="http://www.intro-webdesign.com/images/newlogo.png" alt="Text WD4E">         
+                This page was created by Marcel Ceselka &amp; Colleen van Lent. To learn more about web design, visit <a href="http://www.intro-webdesign.com">Intro to Web Design</a>.
+            </p>
         </footer>
     </body>
 </html>
