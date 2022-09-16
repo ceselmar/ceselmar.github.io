@@ -1,9 +1,10 @@
-package p8.marcel;
+package p8.marcel.datamodel;
 
 import java.util.Iterator;
 import java.util.List;
 
 import com.filenet.api.admin.ClassDefinition;
+import com.filenet.api.admin.DocumentClassDefinition;
 import com.filenet.api.admin.LocalizedString;
 import com.filenet.api.admin.PropertyDefinition;
 import com.filenet.api.admin.PropertyTemplate;
@@ -25,25 +26,106 @@ import com.filenet.api.util.Id;
 
 public class CommandProcessor {
 	public static void ExecuteChanges(ObjectStore os) {
-//		createNewPropertyTemplate(os, "FDA_Test1", "STRING", Cardinality.SINGLE, "FDA Test");
-//		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
-//		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
-//		createNewPropertyTemplate(os, "FDA_Test3", "INTEGER", Cardinality.SINGLE, "FDA Test 3");
-//		createNewPropertyTemplate(os, "FDA_Test4", "BOOLEAN", Cardinality.SINGLE, "FDA Test 4");
-		// DeletePropertyTemplate(os, "FDA_Test1");
-		// DeletePropertyTemplate(os, "FDA_Test2");
-		// DeletePropertyTemplate(os, "FDA_Test3");
-		// DeletePropertyTemplate(os, "FDA_Test4");
-		// Id propID = new Id("{97811EE8-4AEA-4A58-B6FE-CFAE90A7C90B}");
-		// FetchPropertyTemplate(os, propID);
+		createNewPropertyTemplate(os, "FDA_Test1", "STRING", Cardinality.SINGLE, "FDA Test");
+		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
+		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
+		createNewPropertyTemplate(os, "FDA_Test3", "INTEGER", Cardinality.SINGLE, "FDA Test 3");
+		createNewPropertyTemplate(os, "FDA_Test4", "BOOLEAN", Cardinality.SINGLE, "FDA Test 4");
+
+		AssignPropertyToDocClass(os, "FDA_Test1", "TestDocSubSubClass2");
+		AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass");
+		AssignPropertyToDocClass(os, "FDA_Test2", "TestDocSubClass");
+		AssignPropertyToDocClass(os, "FDA_Test32", "TestDocClass");		
+		AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass95");
+		AssignPropertyToDocClass(os, "FDA_Test3", "TestDocSubClass");
+		AssignPropertyToDocClass(os, "FDA_Test4", "TestDocSubSubClass1");
+
+//		 DeletePropertyTemplate(os, "FDA_Test1");
+//		 DeletePropertyTemplate(os, "FDA_Test2");
+//		 DeletePropertyTemplate(os, "FDA_Test3");
+//		 DeletePropertyTemplate(os, "FDA_Test4");
+		
+		
+//		createNewPropertyTemplate(os, "FDA_Test5", "STRING", Cardinality.SINGLE, "FDA Test 5", "FDA German Test 5", true, "FDA_Choicelist", 150, "Description EN", "Description DE");
+	}
+
+//	private static void createNewPropertyTemplate(ObjectStore os, String propSymbolicName, String propType,
+//			Cardinality cardin, String propDisplayName, String propDisplayDE, boolean CBREnabled, String choiceListName, int maximumLength, String descriptionEN, String descriptionDE) {
+//		createNewPropertyTemplate(os, propSymbolicName, propType, cardin, propDisplayName);
+//		
+//		IndependentObjectSet results = searchPropertyBySymbolicName(os, propSymbolicName);
+//		Iterator resultsIter = results.iterator();
+//		
+//		if (results.isEmpty()) {
+//			System.out.println("The property " + propSymbolicName + " doesn't exist.");
+//			return;
+//		}
+//		
+//		while (resultsIter.hasNext()) {
+//			PropertyTemplate prop = (PropertyTemplate) resultsIter.next();
+//			updateOptionalPropertyValues(prop, propDisplayDE, CBREnabled, choiceListName, maximumLength, descriptionEN, descriptionDE);
+//		}
+//	}
+
+//	private static void updateOptionalPropertyValues(PropertyTemplate prop, String propDisplayDE, boolean cBREnabled,
+//			String choiceListName, int maximumLength, String descriptionEN, String descriptionDE) {
+//		// TODO Auto-generated method stub
+//		LocalizedString localDisplayName = Factory.LocalizedString.createInstance();
+//		localDisplayName.set_LocalizedText(propDisplayDE);
+//		localDisplayName.set_LocaleName("de");
+//		prop.get_DisplayNames().add(localDisplayName);
+//		
+//		LocalizedString localDescription = Factory.LocalizedString.createInstance();
+//		localDescription.set_LocalizedText(descriptionEN);
+//		localDescription.set_LocaleName("en-us");
+//		localDescription.set_LocalizedText(descriptionDE);
+//		localDescription.set_LocaleName("de");
+////		ChoiceList propCl = Factory.ChoiceList.createInstance(os);
+//		prop.set_DescriptiveTexts(Factory.LocalizedString.createList());
+//		prop.get_DescriptiveTexts().add(localDescription);
+//	}
+
+	private static void AssignPropertyToDocClass(ObjectStore os, String propSymbolicName, String docClassSymbolicName) {
+		IndependentObjectSet results = searchPropertyBySymbolicName(os, propSymbolicName);
+
+		if (results.isEmpty()) {
+			System.out.println("The property " + propSymbolicName + " doesn't exist.");
+			return;
+		}
+
+		DocumentClassDefinition docClass;
+		try {
+			docClass = Factory.DocumentClassDefinition.fetchInstance(os, docClassSymbolicName, null);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("The document class " + docClassSymbolicName + " doesn't exist.");
+			return;
+		}
+
+		PropertyDefinitionList props = docClass.get_PropertyDefinitions();
+		Iterator propsIter = props.iterator();
+		while (propsIter.hasNext()) {
+			PropertyDefinition existingPropDef = (PropertyDefinition) propsIter.next();
+
+			if (existingPropDef.get_SymbolicName().equalsIgnoreCase(propSymbolicName)) {
+				System.out.println("Property " + propSymbolicName + " is already assigned to " + docClassSymbolicName);
+				return;
+			}
+		}
+
+		Iterator resultsIter = results.iterator();
+		while (resultsIter.hasNext()) {
+			PropertyTemplate prop = (PropertyTemplate) resultsIter.next();
+			PropertyDefinition propDef = (PropertyDefinition) prop.createClassProperty();
+			props.add(propDef);
+			System.out.println("Adding property " + propSymbolicName + " to document class " + docClassSymbolicName);
+		}
+		docClass.set_PropertyDefinitions(props);
+		docClass.save(RefreshMode.NO_REFRESH);
 	}
 
 	private static void DeletePropertyTemplate(ObjectStore os, String propSymbolicName) {
-		String sqlCondition = "SymbolicName = '" + propSymbolicName + "'";
-		SearchSQL sql = new SearchSQL(
-				"SELECT " + "SymbolicName" + " FROM " + "PropertyTemplate" + " WHERE " + sqlCondition);
-		SearchScope scope = new SearchScope(os);
-		IndependentObjectSet results = scope.fetchObjects(sql, 1, null, false);
+		IndependentObjectSet results = searchPropertyBySymbolicName(os, propSymbolicName);
 
 		if (results.isEmpty()) {
 			System.out.println("The property " + propSymbolicName + " doesn't exist.");
@@ -97,6 +179,7 @@ public class CommandProcessor {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void printListItems(List classProps) {
 		Iterator classPropIter = classProps.iterator();
 		while (classPropIter.hasNext()) {
@@ -122,16 +205,12 @@ public class CommandProcessor {
 	private static void createNewPropertyTemplate(ObjectStore os, String propSymbolicName, String propType,
 			Cardinality cardin, String propDisplayName) {
 		// Check if the property already exists
-		String sqlCondition = "SymbolicName = '" + propSymbolicName + "'";
-		SearchSQL sql = new SearchSQL(
-				"SELECT " + "SymbolicName" + " FROM " + "PropertyTemplate" + " WHERE " + sqlCondition);
-		SearchScope scope = new SearchScope(os);
-		IndependentObjectSet results = scope.fetchObjects(sql, 1, null, false);
+		IndependentObjectSet results = searchPropertyBySymbolicName(os, propSymbolicName);
+
 		if (!results.isEmpty()) {
 			System.out.println("Property " + propSymbolicName + " already exists.");
 			return;
 		}
-
 		if (propType.equals("STRING")) {
 			PropertyTemplateString pTString = Factory.PropertyTemplateString.createInstance(os);
 			createPropertyTemplate(os, propSymbolicName, cardin, propDisplayName, pTString);
@@ -147,6 +226,15 @@ public class CommandProcessor {
 		} else {
 			System.out.println("Property type " + propType + " is not yet implemented.");
 		}
+	}
+
+	private static IndependentObjectSet searchPropertyBySymbolicName(ObjectStore os, String propSymbolicName) {
+		String sqlCondition = "SymbolicName = '" + propSymbolicName + "'";
+		SearchSQL sql = new SearchSQL(
+				"SELECT " + "SymbolicName" + " FROM " + "PropertyTemplate" + " WHERE " + sqlCondition);
+		SearchScope scope = new SearchScope(os);
+		IndependentObjectSet results = scope.fetchObjects(sql, 1, null, false);
+		return results;
 	}
 
 	private static void createPropertyTemplate(ObjectStore os, String propSymbolicName, Cardinality cardin,

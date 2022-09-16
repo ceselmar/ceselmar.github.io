@@ -1,4 +1,4 @@
-package p8.marcel;
+package p8.marcel.datamodel;
 
 import java.util.Iterator;
 
