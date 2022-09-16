@@ -1,15 +1,20 @@
 package p8.marcel;
 
 import java.util.Iterator;
+import java.util.List;
 
+import com.filenet.api.admin.ClassDefinition;
 import com.filenet.api.admin.LocalizedString;
+import com.filenet.api.admin.PropertyDefinition;
 import com.filenet.api.admin.PropertyTemplate;
 import com.filenet.api.admin.PropertyTemplateBoolean;
 import com.filenet.api.admin.PropertyTemplateDateTime;
 import com.filenet.api.admin.PropertyTemplateInteger32;
 import com.filenet.api.admin.PropertyTemplateString;
+import com.filenet.api.collection.ClassDefinitionSet;
 import com.filenet.api.collection.IndependentObjectSet;
 import com.filenet.api.collection.LocalizedStringList;
+import com.filenet.api.collection.PropertyDefinitionList;
 import com.filenet.api.constants.Cardinality;
 import com.filenet.api.constants.RefreshMode;
 import com.filenet.api.core.Factory;
@@ -20,11 +25,11 @@ import com.filenet.api.util.Id;
 
 public class CommandProcessor {
 	public static void ExecuteChanges(ObjectStore os) {
-		createNewPropertyTemplate(os, "FDA_Test1", "STRING", Cardinality.SINGLE, "FDA Test");
-		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
-		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
-		createNewPropertyTemplate(os, "FDA_Test3", "INTEGER", Cardinality.SINGLE, "FDA Test 3");
-		createNewPropertyTemplate(os, "FDA_Test4", "BOOLEAN", Cardinality.SINGLE, "FDA Test 4");
+//		createNewPropertyTemplate(os, "FDA_Test1", "STRING", Cardinality.SINGLE, "FDA Test");
+//		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
+//		createNewPropertyTemplate(os, "FDA_Test2", "STRING", Cardinality.SINGLE, "FDA Test 2");
+//		createNewPropertyTemplate(os, "FDA_Test3", "INTEGER", Cardinality.SINGLE, "FDA Test 3");
+//		createNewPropertyTemplate(os, "FDA_Test4", "BOOLEAN", Cardinality.SINGLE, "FDA Test 4");
 		// DeletePropertyTemplate(os, "FDA_Test1");
 		// DeletePropertyTemplate(os, "FDA_Test2");
 		// DeletePropertyTemplate(os, "FDA_Test3");
@@ -49,13 +54,55 @@ public class CommandProcessor {
 		while (resultsIter.hasNext()) {
 			PropertyTemplate pT = (PropertyTemplate) resultsIter.next();
 			try {
-				System.out.println("Trying to delete property " + pT.get_SymbolicName());
+				ClassDefinitionSet docClasses = (ClassDefinitionSet) pT.fetchProperty("UsedInClasses", null)
+						.getIndependentObjectSetValue();
+
+				if (!docClasses.isEmpty()) {
+					Iterator docIter = docClasses.iterator();
+					while (docIter.hasNext()) {
+						ClassDefinition usedInClass = (ClassDefinition) docIter.next();
+						usedInClass.refresh();
+						removePropertyDefinitionFromList(pT.get_SymbolicName(), usedInClass);
+					}
+				}
+				System.out.println("Deleting property " + propSymbolicName);
 				pT.delete();
 				pT.save(RefreshMode.NO_REFRESH);
-				System.out.println(propSymbolicName + " was deleted.");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void removePropertyDefinitionFromList(String symbolicName, ClassDefinition usedInClass) {
+
+		ClassDefinition parentClass = usedInClass.get_SuperclassDefinition();
+
+		if (!parentClass.get_SymbolicName().equals("Document")) {
+			System.out.println("Accessing superclass: " + parentClass.get_SymbolicName() + " of class "
+					+ usedInClass.get_SymbolicName());
+			removePropertyDefinitionFromList(symbolicName, parentClass);
+		}
+		PropertyDefinitionList classProps = usedInClass.get_PropertyDefinitions();
+		Iterator classPropIter = classProps.iterator();
+		while (classPropIter.hasNext()) {
+			PropertyDefinition prop = (PropertyDefinition) classPropIter.next();
+			if (prop.get_SymbolicName().equals(symbolicName)) {
+				System.out
+						.println("Removing property " + symbolicName + " from class " + usedInClass.get_SymbolicName());
+				classProps.remove(prop);
+				usedInClass.save(RefreshMode.NO_REFRESH);
+			}
+		}
+	}
+
+	private static void printListItems(List classProps) {
+		Iterator classPropIter = classProps.iterator();
+		while (classPropIter.hasNext()) {
+			PropertyDefinition prop = (PropertyDefinition) classPropIter.next();
+			if (prop.get_SymbolicName().contains("FDA_")) {
+				System.out.println("Property " + prop.get_SymbolicName() + " is present.");
 			}
 		}
 	}
