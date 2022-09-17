@@ -7,21 +7,100 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Iterator;
 
+import com.filenet.api.admin.PropertyTemplate;
 import com.filenet.api.collection.ContentElementList;
+import com.filenet.api.collection.IndependentObjectSet;
+import com.filenet.api.collection.PageIterator;
 import com.filenet.api.core.ContentTransfer;
 import com.filenet.api.core.Document;
 import com.filenet.api.core.Factory;
 import com.filenet.api.core.ObjectStore;
 import com.filenet.api.property.FilterElement;
 import com.filenet.api.property.PropertyFilter;
+import com.filenet.api.query.SearchSQL;
+import com.filenet.api.query.SearchScope;
 
 public class DocCommands {
 	public static void ExecuteChanges(ObjectStore os) {
 		// GetDocumentContent(os, "TestDocSubSubClass2", "/Test/Test Doc 1");
 		// GetDocumentContentElements(os, "/Test/Test Doc 1");
 
-		GetDocumentProperties(os, "TestDocSubSubClass2", "/Test/Test Doc 1");
+		// GetDocumentProperties(os, "TestDocSubSubClass2", "/Test/Test Doc 1");
+//		 GetExistingPropertyTemplates(os);
+
+	}
+
+	private static void GetExistingPropertyTemplates(ObjectStore os) {
+//		IndependentObjectSet results = searchPropertyTemplates(os);
+		IndependentObjectSet results = searchPagedPropertyTemplates(os);
+		
+		if (results.isEmpty()) {
+			System.out.println("No results returned.");
+		}
+		String name = "FDA Properties.txt";
+
+		try {
+			BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(name));
+			writePropertiesToFile(results, writer);
+//			writePagedPropertiesToFile(results, writer);
+			writer.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void writePagedPropertiesToFile(IndependentObjectSet results, BufferedOutputStream writer) {
+		PageIterator iter = results.pageIterator();
+		
+		while (iter.nextPage()) {
+			for (Object obj : iter.getCurrentPage()) {
+				PropertyTemplate prop = (PropertyTemplate) obj;
+				System.out.println(prop.get_SymbolicName());
+			}
+			
+		}
+		
+	}
+
+	private static void writePropertiesToFile(IndependentObjectSet results, BufferedOutputStream writer)
+			throws IOException {
+		Iterator resultsIter = results.iterator();
+		while (resultsIter.hasNext()) {
+			PropertyTemplate pT = (PropertyTemplate) resultsIter.next();
+			System.out.println("Property "+ pT.get_SymbolicName() +" exists.");
+//			writePropertyToFile(pT, writer);
+		}
+	}
+
+	private static IndependentObjectSet searchPropertyTemplates(ObjectStore os) {
+		String queryString = "SELECT SymbolicName FROM PropertyTemplate WHERE SymbolicName like 'FDA_%'";
+		SearchSQL sql = new SearchSQL(queryString);
+		SearchScope scope = new SearchScope(os);
+		PropertyFilter filter = new PropertyFilter();
+		filter.addIncludeProperty(0, null, false, "SymbolicName");		
+		IndependentObjectSet results = scope.fetchObjects(sql, 1, filter, false);
+		return results;
+	}
+	
+	private static IndependentObjectSet searchPagedPropertyTemplates(ObjectStore os) {
+		String queryString = "SELECT SymbolicName FROM PropertyTemplate WHERE SymbolicName like 'FDA_%'";
+		SearchSQL sql = new SearchSQL(queryString);
+		SearchScope scope = new SearchScope(os);
+		PropertyFilter filter = new PropertyFilter();
+		filter.addIncludeProperty(0, null, false, "SymbolicName");		
+		IndependentObjectSet results = scope.fetchObjects(sql, 50, filter, true);
+		return results;
+	}
+
+	private static void writePropertyToFile(PropertyTemplate pT, BufferedOutputStream writer) throws IOException {
+		String propName = pT.get_SymbolicName() + "\r\n";
+		byte[] bytes = propName.getBytes();
+		int len = bytes.length;
+		writer.write(bytes, 0, len);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -88,8 +167,6 @@ public class DocCommands {
 	}
 
 	private static void GetDocumentContent(ObjectStore os, String docClassName, String docPath) {
-		// Document doc = Factory.Document.getInstance(os, docClassName,
-		// docPath);
 		Document doc = Factory.Document.fetchInstance(os, docPath, null);
 		InputStream stream = doc.accessContentStream(0);
 

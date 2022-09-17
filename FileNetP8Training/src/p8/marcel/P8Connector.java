@@ -1,4 +1,4 @@
-package p8.marcel.datamodel;
+package p8.marcel;
 
 import java.util.Iterator;
 
@@ -9,7 +9,10 @@ import com.filenet.api.core.Connection;
 import com.filenet.api.core.Domain;
 import com.filenet.api.core.Factory;
 import com.filenet.api.core.ObjectStore;
-import com.filenet.api.util.UserContext;;
+import com.filenet.api.util.UserContext;
+
+import p8.marcel.datamodel.DataModelCommandProcessor;
+import p8.marcel.documentHandlers.DocCommands;
 
 public class P8Connector {
 	public static void main(String[] args) {
@@ -42,8 +45,8 @@ public class P8Connector {
 			System.out.println("Object store: " + store.get_Name());
 			System.out.println("Connection to Content Platform Engine successful");
 
-			CommandProcessor.ExecuteChanges(store);
-
+			DataModelCommandProcessor.ExecuteChanges(domain,store);
+			DocCommands.ExecuteChanges(store);
 		} finally {
 			UserContext.get().popSubject();
 		}
