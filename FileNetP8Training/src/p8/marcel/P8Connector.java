@@ -45,7 +45,7 @@ public class P8Connector {
 			System.out.println("Object store: " + store.get_Name());
 			System.out.println("Connection to Content Platform Engine successful");
 
-			DataModelCommandProcessor.ExecuteChanges(domain,store);
+//			DataModelCommandProcessor.ExecuteChanges(domain,store);
 			DocCommands.ExecuteChanges(store);
 		} finally {
 			UserContext.get().popSubject();

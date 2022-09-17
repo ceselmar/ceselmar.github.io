@@ -30,8 +30,9 @@ import com.filenet.api.util.Id;
 
 public class DataModelCommandProcessor {
 	public static void ExecuteChanges(Domain domain, ObjectStore os) {
-		UpdatingBatch batch = UpdatingBatch.createUpdatingBatchInstance(domain, RefreshMode.REFRESH);
+		UpdatingBatch batch = UpdatingBatch.createUpdatingBatchInstance(domain, RefreshMode.NO_REFRESH);
 		StringList updatedProperties = Factory.StringList.createList();
+
 		// createNewPropertyTemplate(os, "FDA_Test1", "STRING",
 		// Cardinality.SINGLE, "FDA Test");
 		// createNewPropertyTemplate(os, "FDA_Test2", "STRING",
@@ -43,34 +44,39 @@ public class DataModelCommandProcessor {
 		// createNewPropertyTemplate(os, "FDA_Test4", "BOOLEAN",
 		// Cardinality.SINGLE, "FDA Test 4");
 
-		 AssignPropertyToDocClass(os, "FDA_Test1", "TestDocSubSubClass2");
-		 AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass");
-		 AssignPropertyToDocClass(os, "FDA_Test2", "TestDocSubClass");
-		 AssignPropertyToDocClass(os, "FDA_Test32", "TestDocClass");
-		 AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass95");
-		 AssignPropertyToDocClass(os, "FDA_Test3", "TestDocSubClass");
-		 AssignPropertyToDocClass(os, "FDA_Test4", "TestDocSubSubClass1");
+		// AssignPropertyToDocClass(os, "FDA_Test1", "TestDocSubSubClass2");
+		// AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass");
+		// AssignPropertyToDocClass(os, "FDA_Test2", "TestDocSubClass");
+		// AssignPropertyToDocClass(os, "FDA_Test32", "TestDocClass");
+		// AssignPropertyToDocClass(os, "FDA_Test2", "TestDocClass95");
+		// AssignPropertyToDocClass(os, "FDA_Test3", "TestDocSubClass");
+		// AssignPropertyToDocClass(os, "FDA_Test4", "TestDocSubSubClass1");
 
-//		DeletePropertyTemplate(os, "FDA_Test1");
-//		DeletePropertyTemplate(os, "FDA_Test2");
-//		DeletePropertyTemplate(os, "FDA_Test3");
-//		DeletePropertyTemplate(os, "FDA_Test4");
-//		DeletePropertyTemplate(os, "FDA_Test5");
+		// DeletePropertyTemplate(os, "FDA_Test1");
+		// DeletePropertyTemplate(os, "FDA_Test2");
+		// DeletePropertyTemplate(os, "FDA_Test3");
+		// DeletePropertyTemplate(os, "FDA_Test4");
+		// DeletePropertyTemplate(os, "FDA_Test5");
 
 		// createNewPropertyTemplate(os, "FDA_Test5", "STRING",
 		// Cardinality.SINGLE, "FDA Test 5", "FDA German Test 5", true,
 		// "FDA_Choicelist", 150, "Description EN", "Description DE");
 
-//		createNewPropertyTemplateBatch(batch, os, updatedProperties, "FDA_Test1", "STRING", Cardinality.SINGLE,
-//				"FDA Test");
-//		createNewPropertyTemplateBatch(batch, os, updatedProperties, "FDA_Test2", "STRING", Cardinality.SINGLE,
-//				"FDA Test 2");
-//		createNewPropertyTemplateBatch(batch, os, updatedProperties, "FDA_Test2", "STRING", Cardinality.SINGLE,
-//				"FDA Test 2");
-//		createNewPropertyTemplateBatch(batch, os, updatedProperties, "FDA_Test3", "INTEGER", Cardinality.SINGLE,
-//				"FDA Test 3");
-//		createNewPropertyTemplateBatch(batch, os, updatedProperties, "FDA_Test4", "BOOLEAN", Cardinality.SINGLE,
-//				"FDA Test 4");
+		// createNewPropertyTemplateBatch(batch, os, updatedProperties,
+		// "FDA_Test1", "STRING", Cardinality.SINGLE,
+		// "FDA Test");
+		// createNewPropertyTemplateBatch(batch, os, updatedProperties,
+		// "FDA_Test2", "STRING", Cardinality.SINGLE,
+		// "FDA Test 2");
+		// createNewPropertyTemplateBatch(batch, os, updatedProperties,
+		// "FDA_Test2", "STRING", Cardinality.SINGLE,
+		// "FDA Test 2");
+		// createNewPropertyTemplateBatch(batch, os, updatedProperties,
+		// "FDA_Test3", "INTEGER", Cardinality.SINGLE,
+		// "FDA Test 3");
+		// createNewPropertyTemplateBatch(batch, os, updatedProperties,
+		// "FDA_Test4", "BOOLEAN", Cardinality.SINGLE,
+		// "FDA Test 4");
 
 		try {
 			if (batch.hasPendingExecute()) {

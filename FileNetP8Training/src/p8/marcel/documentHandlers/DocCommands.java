@@ -10,17 +10,25 @@ import java.io.InputStreamReader;
 import java.util.Iterator;
 
 import com.filenet.api.admin.PropertyTemplate;
+import com.filenet.api.collection.AccessPermissionList;
 import com.filenet.api.collection.ContentElementList;
+import com.filenet.api.collection.DependentObjectList;
 import com.filenet.api.collection.IndependentObjectSet;
 import com.filenet.api.collection.PageIterator;
+import com.filenet.api.constants.AccessRight;
+import com.filenet.api.constants.PermissionSource;
+import com.filenet.api.constants.PropertyNames;
+import com.filenet.api.constants.RefreshMode;
 import com.filenet.api.core.ContentTransfer;
 import com.filenet.api.core.Document;
 import com.filenet.api.core.Factory;
 import com.filenet.api.core.ObjectStore;
 import com.filenet.api.property.FilterElement;
+import com.filenet.api.property.Properties;
 import com.filenet.api.property.PropertyFilter;
 import com.filenet.api.query.SearchSQL;
 import com.filenet.api.query.SearchScope;
+import com.filenet.api.security.AccessPermission;
 
 public class DocCommands {
 	public static void ExecuteChanges(ObjectStore os) {
@@ -28,14 +36,57 @@ public class DocCommands {
 		// GetDocumentContentElements(os, "/Test/Test Doc 1");
 
 		// GetDocumentProperties(os, "TestDocSubSubClass2", "/Test/Test Doc 1");
-//		 GetExistingPropertyTemplates(os);
+		// GetExistingPropertyTemplates(os);
+		removeDeletePermissionFromDocument(os,"/Test/Test Doc 1");
+	}
 
+	private static void removeDeletePermissionFromDocument(ObjectStore os, String path) {
+		PropertyFilter filter = new PropertyFilter();
+		filter.addIncludeProperty(0, null, false, PropertyNames.PERMISSIONS);
+		Document doc = Factory.Document.fetchInstance(os, path, filter);
+//		Document doc = Factory.Document.getInstance(os, "TestDocSubSubClass2", path);
+		Properties props = doc.getProperties();
+		
+		if (! props.isPropertyPresent(PropertyNames.PERMISSIONS)) {
+			System.out.println("Document security was not retrieved.");
+		}
+		
+		AccessPermissionList acl = (AccessPermissionList) props.getDependentObjectListValue(PropertyNames.PERMISSIONS);
+		Iterator aclIter = acl.iterator();
+		while (aclIter.hasNext()) {
+			AccessPermission ace = (AccessPermission) aclIter.next();
+			PermissionSource acePS = ace.get_PermissionSource();
+			
+			if (acePS.equals(PermissionSource.SOURCE_PARENT)) {
+				continue;
+			}
+			int rights = ace.get_AccessMask().intValue();
+			String grantee = ace.get_GranteeName();
+			
+			if (! grantee.equalsIgnoreCase("Business Analysts@ecm.ibm.local")) {
+				continue;
+			}
+			System.out.println(rights + " " + grantee);
+	 /* Removing delete permission */
+			if ((rights & AccessRight.DELETE_AS_INT) != 0) {
+				rights &= ~AccessRight.DELETE_AS_INT;
+				ace.set_AccessMask(rights);
+			}
+			
+	/* Adding delete permission	*/
+//			if ((rights & AccessRight.DELETE_AS_INT) == 0) {
+//				rights |= AccessRight.DELETE_AS_INT;
+//				ace.set_AccessMask(rights);
+//			}
+			System.out.println(rights + " " + grantee);
+		}		
+		doc.save(RefreshMode.NO_REFRESH);
 	}
 
 	private static void GetExistingPropertyTemplates(ObjectStore os) {
-//		IndependentObjectSet results = searchPropertyTemplates(os);
+		// IndependentObjectSet results = searchPropertyTemplates(os);
 		IndependentObjectSet results = searchPagedPropertyTemplates(os);
-		
+
 		if (results.isEmpty()) {
 			System.out.println("No results returned.");
 		}
@@ -44,7 +95,7 @@ public class DocCommands {
 		try {
 			BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(name));
 			writePropertiesToFile(results, writer);
-//			writePagedPropertiesToFile(results, writer);
+			// writePagedPropertiesToFile(results, writer);
 			writer.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -55,15 +106,15 @@ public class DocCommands {
 
 	private static void writePagedPropertiesToFile(IndependentObjectSet results, BufferedOutputStream writer) {
 		PageIterator iter = results.pageIterator();
-		
+
 		while (iter.nextPage()) {
 			for (Object obj : iter.getCurrentPage()) {
 				PropertyTemplate prop = (PropertyTemplate) obj;
 				System.out.println(prop.get_SymbolicName());
 			}
-			
+
 		}
-		
+
 	}
 
 	private static void writePropertiesToFile(IndependentObjectSet results, BufferedOutputStream writer)
@@ -71,8 +122,8 @@ public class DocCommands {
 		Iterator resultsIter = results.iterator();
 		while (resultsIter.hasNext()) {
 			PropertyTemplate pT = (PropertyTemplate) resultsIter.next();
-			System.out.println("Property "+ pT.get_SymbolicName() +" exists.");
-//			writePropertyToFile(pT, writer);
+			System.out.println("Property " + pT.get_SymbolicName() + " exists.");
+			// writePropertyToFile(pT, writer);
 		}
 	}
 
@@ -81,17 +132,17 @@ public class DocCommands {
 		SearchSQL sql = new SearchSQL(queryString);
 		SearchScope scope = new SearchScope(os);
 		PropertyFilter filter = new PropertyFilter();
-		filter.addIncludeProperty(0, null, false, "SymbolicName");		
+		filter.addIncludeProperty(0, null, false, "SymbolicName");
 		IndependentObjectSet results = scope.fetchObjects(sql, 1, filter, false);
 		return results;
 	}
-	
+
 	private static IndependentObjectSet searchPagedPropertyTemplates(ObjectStore os) {
 		String queryString = "SELECT SymbolicName FROM PropertyTemplate WHERE SymbolicName like 'FDA_%'";
 		SearchSQL sql = new SearchSQL(queryString);
 		SearchScope scope = new SearchScope(os);
 		PropertyFilter filter = new PropertyFilter();
-		filter.addIncludeProperty(0, null, false, "SymbolicName");		
+		filter.addIncludeProperty(0, null, false, "SymbolicName");
 		IndependentObjectSet results = scope.fetchObjects(sql, 50, filter, true);
 		return results;
 	}
