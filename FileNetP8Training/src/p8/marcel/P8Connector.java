@@ -1,6 +1,11 @@
 package p8.marcel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Iterator;
+import java.util.Properties;
 
 import javax.security.auth.Subject;
 
@@ -15,12 +20,26 @@ import p8.marcel.datamodel.DataModelCommandProcessor;
 import p8.marcel.documentHandlers.DocCommands;
 
 public class P8Connector {
+    @SuppressWarnings("rawtypes")
     public static void main(String[] args) {
-	// Set connection parameters; substitute for the placeholders.
-	String uri = "http://192.168.62.134:9080/wsi/FNCEWS40MTOM";
-	String username = "p8admin";
-	String password = "filenet";
-
+	
+	Properties p8props = new Properties();
+	try {
+	    FileInputStream fis = new FileInputStream("resources/P8Connection.properties");
+	    p8props.load(fis);
+	} catch (FileNotFoundException e) {
+	    e.printStackTrace();
+	    return;
+	} catch (IOException e) {
+	    e.printStackTrace();
+	    return;
+	}
+	
+	String uri = p8props.getProperty("uri");
+	String username = p8props.getProperty("username");
+	String password = p8props.getProperty("password");
+	
+//	System.out.println(uri + " " + username + " " + password);
 	// Make connection.
 	Connection conn = Factory.Connection.getConnection(uri);
 	Subject subject = UserContext.createSubject(conn, username, password, "FileNetP8WSI");
@@ -45,8 +64,8 @@ public class P8Connector {
 	    System.out.println("Object store: " + store.get_Name());
 	    System.out.println("Connection to Content Platform Engine successful");
 
-//	    DataModelCommandProcessor.ExecuteChanges(domain,store);
-	    DocCommands.ExecuteChanges(store);
+	    DataModelCommandProcessor.executeChanges(domain,store);
+//	    DocCommands.executeChanges(store);
 	} finally {
 	    UserContext.get().popSubject();
 	}

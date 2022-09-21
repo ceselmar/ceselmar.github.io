@@ -10,10 +10,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.Set;
+
+import org.apache.commons.json.JSONException;
+import org.apache.commons.json.JSONObject;
 
 import com.filenet.api.admin.PropertyTemplate;
 import com.filenet.api.collection.AccessPermissionList;
 import com.filenet.api.collection.ContentElementList;
+import com.filenet.api.collection.DocumentSet;
 import com.filenet.api.collection.IndependentObjectSet;
 import com.filenet.api.collection.PageIterator;
 import com.filenet.api.constants.AccessRight;
@@ -31,6 +36,8 @@ import com.filenet.api.core.DynamicReferentialContainmentRelationship;
 import com.filenet.api.core.Factory;
 import com.filenet.api.core.Folder;
 import com.filenet.api.core.ObjectStore;
+import com.filenet.api.core.ReferentialContainmentRelationship;
+import com.filenet.api.core.UpdatingBatch;
 import com.filenet.api.exception.EngineRuntimeException;
 import com.filenet.api.exception.ExceptionCode;
 import com.filenet.api.property.FilterElement;
@@ -41,7 +48,7 @@ import com.filenet.api.query.SearchScope;
 import com.filenet.api.security.AccessPermission;
 
 public class DocCommands {
-    public static void ExecuteChanges(ObjectStore os) {
+    public static void executeChanges(ObjectStore os) {
 	// GetDocumentContent(os, "TestDocSubSubClass2", "/Test/Test Doc 1");
 	// GetDocumentContentElements(os, "/Test/Test Doc 1");
 
@@ -50,13 +57,87 @@ public class DocCommands {
 	// removeDeletePermissionFromDocument(os, "/Test/Test Doc 1");
 	// createNewDocumentVersion(os, "TestDocSubSubClass2", "/Test/Test Doc
 	// 1");
-	createFileInP8WithPropertyTemplates(os,"FDA Properties","Test Outputs");
+	// createFileInP8WithPropertyTemplates(os, "FDA Properties4", "Test
+	// Outputs3");
+	// deleteDocumentsInP8(os,"FDA Properties1");
+	// deleteFolderInP8(os, "Test Outputs1");
+    }
+
+    private static void deleteDocumentsInP8(ObjectStore os, String docName) {
+	PropertyFilter filter = new PropertyFilter();
+	filter.addIncludeProperty(0, null, false, "DocumentTitle");
+
+	SearchSQL sql = new SearchSQL("SELECT DocumentTitle FROM Document WHERE DocumentTitle='" + docName + "'");
+	SearchScope scope = new SearchScope(os);
+	IndependentObjectSet results = scope.fetchObjects(sql, 0, filter, false);
+
+	if (results.isEmpty()) {
+	    System.err.println("No document with name " + docName + " was found.");
+	    return;
+	}
+	UpdatingBatch batch = UpdatingBatch.createUpdatingBatchInstance(os.get_Domain(), RefreshMode.NO_REFRESH);
+	Iterator iter = results.iterator();
+	while (iter.hasNext()) {
+	    Document doc = (Document) iter.next();
+	    batch.add(doc, null);
+	    // doc.delete();
+	    // doc.save(RefreshMode.NO_REFRESH);
+	    System.out.println("Document " + docName + " was deleted.");
+	}
+	try {
+	    if (batch.hasPendingExecute()) {
+		batch.updateBatch();
+		System.out.println("Batch is finished.");
+	    } else {
+		System.out.println("Empty batch.");
+	    }
+	} catch (Exception e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
+    }
+
+    private static void deleteFolderInP8(ObjectStore os, String foldName) {
+	// PropertyFilter filter = new PropertyFilter();
+	// filter.addIncludeProperty(0, null, false, "DocumentTitle
+	// Containees");
+
+	SearchSQL sql = new SearchSQL("SELECT FolderName FROM Folder WHERE FolderName='" + foldName + "'");
+	SearchScope scope = new SearchScope(os);
+	IndependentObjectSet results = scope.fetchObjects(sql, 0, null, false);
+
+	if (results.isEmpty()) {
+	    System.err.println("No folder with name " + foldName + " was found.");
+	    return;
+	}
+
+	try {
+	    Iterator iter = results.iterator();
+	    while (iter.hasNext()) {
+		Folder fold = (Folder) iter.next();
+		fold.fetchProperty("ContainedDocuments", null);
+		DocumentSet docs = fold.get_ContainedDocuments();
+		Iterator docsIter = docs.iterator();
+		while (docsIter.hasNext()) {
+		    Document doc = (Document) docsIter.next();
+		    ReferentialContainmentRelationship rcr = fold.unfile(doc);
+		    fold.save(RefreshMode.REFRESH);
+		    System.out
+			    .println("Document " + doc.get_Name() + " was unfiled from folder" + fold.get_FolderName());
+		}
+		fold.delete();
+		fold.save(RefreshMode.NO_REFRESH);
+		System.out.println("Folder " + foldName + " was deleted.");
+	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
     private static void createFileInP8WithPropertyTemplates(ObjectStore os, String docName, String folderName) {
 	String docClass = "TestDocClass";
 	String docPath = "/" + folderName + "/" + docName;
-	String fileName = docName+".txt";
+	String fileName = docName + ".txt";
 
 	// Check if folder exists
 	SearchSQL sql = new SearchSQL("SELECT FolderName FROM Folder WHERE FolderName = '" + folderName + "'");
@@ -113,8 +194,6 @@ public class DocCommands {
 	}
 
 	Document res = (Document) doc.get_Reservation();
-	res.getProperties().putValue("DocumentTitle", docName);
-
 	ContentElementList list = Factory.ContentElement.createList();
 	ContentTransfer element = Factory.ContentTransfer.createInstance();
 
@@ -122,9 +201,10 @@ public class DocCommands {
 	element.set_RetrievalName(fileName);
 
 	try {
-	    createFileFromExistingPropertyTemplates(os, fileName);	    
+	    createFileFromExistingPropertyTemplates(os, fileName);
 	    element.setCaptureSource(new FileInputStream(new File(fileName)));
 	    list.add(element);
+	    res.getProperties().putValue("DocumentTitle", docName);
 	    res.set_ContentElements(list);
 	    res.checkin(AutoClassify.DO_NOT_AUTO_CLASSIFY, CheckinType.MAJOR_VERSION);
 	    res.save(RefreshMode.NO_REFRESH);
@@ -136,7 +216,8 @@ public class DocCommands {
 
     private static void fileDocumentToFolder(Document doc, Folder fold) {
 	String containmentName = doc.get_Name();
-//	System.out.println("Folder " + fold.get_FolderName() + " was found.");
+	// System.out.println("Folder " + fold.get_FolderName() + " was
+	// found.");
 
 	try {
 	    DynamicReferentialContainmentRelationship drcr = (DynamicReferentialContainmentRelationship) fold.file(doc,
@@ -174,7 +255,7 @@ public class DocCommands {
 	element.set_RetrievalName("file.txt");
 
 	try {
-	    element.setCaptureSource(new FileInputStream(new File("test.csv")));
+	    element.setCaptureSource(new FileInputStream(new File("FDA Properties.txt")));
 	    list.add(element);
 	    res.set_ContentElements(list);
 	    res.checkin(AutoClassify.DO_NOT_AUTO_CLASSIFY, CheckinType.MAJOR_VERSION);
@@ -265,7 +346,8 @@ public class DocCommands {
 	Iterator resultsIter = results.iterator();
 	while (resultsIter.hasNext()) {
 	    PropertyTemplate pT = (PropertyTemplate) resultsIter.next();
-//	    System.out.println("Property " + pT.get_SymbolicName() + " exists.");
+	    // System.out.println("Property " + pT.get_SymbolicName() + "
+	    // exists.");
 	    writePropertyToFile(pT, writer);
 	}
     }

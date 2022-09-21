@@ -1,0 +1,52 @@
+{
+	"FDA_Prop1": {
+		"DisplayName": "FDA Property 1",
+		"DisplayNameDE": "FDA Eigentum 1",
+		"Description": "FDA description 1",
+		"DataType": "STRING",
+		"Cardinality": "SINGLE",
+		"MaximumLength": 100,
+		"TargetClass": "TestDocSubSubClass2"
+	},
+	"FDA_Prop2": {
+		"DisplayName": "FDA Property 2",
+		"DisplayNameDE": "FDA Eigentum 2",
+		"Description": "FDA description 2",
+		"DataType": "STRING",
+		"Cardinality": "SINGLE",
+		"MaximumLength": 100,
+		"TargetClass": "TestDocClass"
+	},
+	"FDA_Prop3": {
+		"DisplayName": "FDA Property 3",
+		"DisplayNameDE": "FDA Eigentum 3",
+		"Description": "FDA description 3",
+		"DataType": "STRING",
+		"Cardinality": "MULTI",
+		"TargetClass": "TestDocSubClass1"
+	},
+	"FDA_Prop4": {
+		"DisplayName": "FDA Property 4",
+		"DisplayNameDE": "FDA Eigentum 4",
+		"Description": "FDA description 4",
+		"DataType": "INTEGER",
+		"Cardinality": "SINGLE",
+		"TargetClass": "TestDocSubSubClass1"
+	},
+	"FDA_Prop5": {
+		"DisplayName": "FDA Property 5",
+		"DisplayNameDE": "FDA Eigentum 5",
+		"Description": "FDA description 5",
+		"DataType": "BOOLEAN",
+		"Cardinality": "SINGLE",
+		"TargetClass": "TestDocClass"
+	},
+	"FDA_Prop6": {
+		"DisplayName": "FDA Property 6",
+		"DisplayNameDE": "FDA Eigentum 6",
+		"Description": "FDA description 6",
+		"DataType": "INTEGER",
+		"Cardinality": "SINGLE",
+		"TargetClass": "TestDocClass"
+	}
+}
